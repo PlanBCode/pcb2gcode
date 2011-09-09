@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>pcb2GCode online</title>
+		<link rel="stylesheet" type="text/css" href="css/reset.css" />
+		<link rel="stylesheet" type="text/css" href="css/forms.css" />
+		<link rel="stylesheet" type="text/css" href="css/main.css" />
+		<script type="text/javascript" src="script.js"></script>
+	</head>
+	<body onload="init();">
+		<div id="outerContainer">
+			<div id="container">
+				<h1>pcb2GCode online(beta)</h1>
+				<div id="ieerror">
+					<p>It seems your using Internet Explorer {version}. Since IE is the only browser that doesn't fully support SVG, we would like to ask you to download a browser that does. Like: 
+						<ul>
+							<li><a href="http://www.mozilla.com/firefox/" target="_blank">Mozilla Firefox</a></li>
+							<li><a href="www.opera.com/" target="_blank">Opera</a></li>
+							<li><a href="http://www.chromium.org/" target="_blank">Chromium</a></li>
+							<li><a href="http://www.google.com/chrome" target="_blank">Google Chrome</a></li>
+						</ul>
+					</p>
+				</div>
+				<div id="editor">
+					<div id="frame1" class="frame">
+						<h2>input</h2>
+						<form enctype="multipart/form-data" method="post" action="pcb2gcode.php?action=generateGCode">
+						<div id="input">
+								<h3 class="first">input gerber files</h3>
+								<div>
+									<label>front</label>
+									<input type="file" name="front"/>
+									<p class="description">front side RS274-X .gbr</p>
+								</div>
+								<div>
+									<label>back</label>
+									<input type="file" name="back"/>
+									<p class="description">back side RS274-X .gbr</p>
+								</div>
+								<div>
+									<label>outline</label>
+									<input type="file" name="outline"/>
+									<p class="description">pcb outline RS274-X .gbr; outline drawn in 10mil traces</p>
+								</div>
+								<div>
+									<label>drill</label>
+									<input type="file" name="drill"/>
+									<p class="description">Excellon drill file</p>
+								</div>
+								<h3>isolation milling</h3>
+								<div>
+									<label>zwork</label>
+									<input type="text" name="zwork" value="-0.008" />
+									<p class="description">milling depth in inches (Z-coordinate while engraving)</p>
+								</div>
+								<div>
+									<label>zsafe</label>
+									<input type="text" name="zsafe" value="1" />
+									<p class="description">safety height (Z-coordinate during rapid moves)</p>
+								</div>
+								<div>
+									<label>offset</label>
+									<input type="text" name="offset" value="2" />
+									<p class="description">distance between the PCB traces and the end mill path in inches; usually half the isolation width</p>
+								</div>
+								<div>
+									<label>mill-feed</label>
+									<input type="text" name="mill-feed" value="6" />
+									<p class="description">feed while isolating in ipm</p>
+								</div>
+								<div>
+									<label>mill-speed</label>
+									<input type="text" name="mill-speed" value="30000" />
+									<p class="description">spindle rpm when milling</p>
+								</div>
+								<div>
+									<label>milldrill</label>
+									<input type="checkbox" name="milldrill" value="milldrill" />
+									<p class="description">drill using the mill head</p>
+								</div>
+								<div>
+									<label>extra-passes</label>
+									<input type="text" name="extra-passes" value="" />
+									<p class="description">specify the the number of extra isolation passes, increasing the isolation width half the tool diameter with each pass</p>
+								</div>
+								<h3>board outline milling</h3>
+								<div>
+									<label>cutter-diameter</label>
+									<input type="text" name="cutter-diameter" value="0.059055118" />
+									<p class="description">diameter of the end mill used for cutting out the PCB</p>
+								</div>
+								<div>
+									<label>zcut</label>
+									<input type="text" name="zcut" value="-0.08" />
+									<p class="description">PCB cutting depth in inches.</p>
+								</div>
+								<div>
+									<label>cut-feed</label>
+									<input type="text" name="cut-feed" value="6" />
+									<p class="description">PCB cutting feed</p>
+								</div>
+								<div>
+									<label>cut-speed</label>
+									<input type="text" name="cut-speed" value="20000" />
+									<p class="description">PCB cutting spindle speed</p>
+								</div>
+								<div>
+									<label>cut-infeed</label>
+									<input type="text" name="cut-infeed" value="1" />
+									<p class="description">Maximum cutting depth; PCB may be cut in multiple passes</p>
+								</div>
+								<h3>hole drilling</h3>
+								<div>
+									<label>zdrill</label>
+									<input type="text" name="zdrill" value="-0.08" />
+									<p class="description">drill depth</p>
+								</div>
+								<div>
+									<label>zchange</label>
+									<input type="text" name="zchange" value="0.25" />
+									<p class="description">tool changing height</p>
+								</div>
+								<div>
+									<label>drill-feed</label>
+									<input type="text" name="drill-feed" value="6" />
+									<p class="description">drill feed; ipm</p>
+								</div>
+								<div>
+									<label>drill-speed</label>
+									<input type="text" name="drill-speed" value="20000" />
+									<p class="description">spindle rpm when drilling</p>
+								</div>
+								<div>
+									<label>drill-front </label>
+									<input type="checkbox" name="drill-front" value="drill-front" />
+									<p class="description">drill through the front side of board</p>
+								</div>
+								<h3>general</h3>
+								<div>
+									<label>metric</label>
+									<input type="checkbox" name="metric" value="metric" />
+									<p class="description">all units are given metric</p>
+								</div>
+								<div>
+									<label>dpi</label>
+									<input type="text" name="dpi" value="1000" />
+									<p class="description">virtual photoplot resolution</p>
+								</div>
+								<div>
+									<label>mirror-absolute</label>
+									<input type="checkbox" name="mirror-absolute" value="mirror-absolute" />
+									<p class="description">mirror back side along absolute zero instead of board center</p>
+								</div>
+								<h3>output files</h3>
+								<div>
+									<label>basename</label>
+									<input type="text" name="basename" value="" />
+									<p class="description">prefix for default output file names</p>
+								</div>
+								<div>
+									<label>front-output</label>
+									<input type="text" name="front-output" value="" />
+									<p class="description">output file for front layer</p>
+								</div>
+								<div>
+									<label>back-output</label>
+									<input type="text" name="back-output" value="" />
+									<p class="description">output file for back layer</p>
+								</div>
+								<div>
+									<label>outline-output </label>
+									<input type="text" name="outline-output" value="" />
+									<p class="description">output file for outline</p>
+								</div>
+								<div>
+									<label>drill-output</label>
+									<input type="text" name="drill-output" value="" />
+									<p class="description">output file for drilling</p>
+								</div>	
+							</div>
+							<input type="submit" class="button" value="create GCode" onclick="onCreateGCODEMouseDown();"/>
+						</form>
+					</div>
+					<div id="frame2" class="frame">
+						<h2>GCode</h2>
+						<div class="tabs">
+							<a href="#" onclick="gotoGCode('front')" class="active">front</a>
+							<a href="#" onclick="gotoGCode('back')">back</a>
+							<a href="#" onclick="gotoGCode('drill')">drill</a>
+							<a href="#" onclick="gotoGCode('outline')">outline</a>
+						</div>
+						<textarea name="gcode" onchange="gcodeChanged();" id="gcode" class="code"></textarea><br />
+						<input type="button" value="front" 	name="front" 	id="frontDownload" 	class="button" 	onclick="download('front');" 	title="download front" />
+	    				<input type="button" value="back"	name="back" 	id="backDownload" 	class="button" 	onclick="download('back');" 	title="download back" />
+	    				<input type="button" value="drill" 	name="drill" 	id="drillDownload" 	class="button" 	onclick="download('drill');" 	title="download drill" />
+	    				<input type="button" value="outline" name="outline" id="outlineDownload" class="button" onclick="download('outline');" 	title="download outline" />
+					</div>
+					<div id="frame3" class="frame">
+						<h2>preview</h2>
+						<div class="tabs">
+							<a href="#" onclick="gotoPreview('visualizer')" class="active">visualizer</a>
+							<a href="#" onclick="gotoPreview('org')">org</a>
+							<a href="#" onclick="gotoPreview('traced')">traced</a>
+						</div>
+						<div id="svgContainer">
+							<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg" width="400" height="400"></svg>
+						</div>
+						<div id="boundsDisplay"></div>
+						<input type="button" class="button" value="visualization" 	onclick="download('visualization');" title="download visualization" />
+	    				<input type="button" class="button" value="original" 		onclick="download('original');" 	 title="download original" />
+	    				<input type="button" class="button" value="traced" 		onclick="download('traced');" 		 title="download traced" />
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div id="footer">
+					Initiative of <a href="http://www.fablabamersfoort.nl" target="_blank">Fablab Amersfoort</a> - Powered by <a href="http://sourceforge.net/apps/mediawiki/pcb2gcode/index.php?title=Main_Page" target="_blank">pcb2gcode</a> - <a href="https://github.com/PlanBCode/pcb2gcode" target="_blank">Code</a> - <a href="https://github.com/PlanBCode/pcb2gcode/issues" target="_blank">Issues / suggestions</a>
+				</div>
+	
+			</div>
+		</div>
+	</body>
+</html>

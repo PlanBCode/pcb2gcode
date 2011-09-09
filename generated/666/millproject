@@ -1,0 +1,211 @@
+# this is an example config file for pcb2gcode.
+# http://reprap.org/wiki/PCB_Milling
+# Quickstart
+#
+# User:Lanthan on 20101024 comments: I got pcb2gcode to compile and it appears to work adequately on Ubuntu 10.04 Lucid 10.04 (RTAI). The most interesting option
+# (IMHO) is to generate a trace isolation voronoi map. I am testing it with Generation 7 Electronics.
+#
+#Here is my current millproject file (as of 20101113) : 
+
+# this is an example config file for pcb2gcode.
+# place this in the same directory as your gerber files to save typing
+
+# Info from manual page for pcb2gcode added to example config file by Martin Dudok van Heel
+#
+
+#       pcb2gcode  - command-line tool for engraving PCBs using CNCs
+#
+# DESCRIPTION
+#
+#       pcb2gcode  is  a program that takes the files typically produced by PCB
+#       (printed circuit board) designing tools, in particular Gerber (RS-274X)
+#       and  Excellon  (an  RS-274C variant) files as parsed by gerbv, and pro‐
+#       duces files that can be used to control a CNC (computer numerical  con‐
+#       trol)  milling  machine. These files are in G code format (RS-274D/NGC)
+#       that can be read, for example, by the linuxcnc EMC2 system.
+#
+#       When these files are executed, an engraving bit is used to  remove  the
+#       surface  from  a  copper  covered circuit board, thus creating isolated
+#       areas. In another step, holes are drilled into the board at the  appro‐
+#       priate  positions,  and  it  can  be cut out in another step. (For each
+#       step, a separate output file is created.)
+#
+# OPTIONS
+#       These programs follow the usual GNU  command  line  syntax,  with  long
+#       options  starting  with  two  dashes  (‘-’).   A  summary of options is
+#       included below.
+#
+#       Instead of passing all options on the command line, nearly all  options
+#       can be stored in a file named millproject. There, options are given one
+#       per line as option=value pairs (without the two  dashes),  and  can  be
+#       separated  by blank lines and commented (everything after a ‘#‘ charac‐
+#       ter is treated as a comment).
+
+# Unless configured otherwise, numeric values are in units  of  inch  and
+# inch/minute.  When  the  --metric  option  is given, they are in mm and
+# mm/minute.
+
+
+# You may want to uncomment and change those in local project files
+
+# front=filename.gbr
+#              Engrave the front side according to the  given  file  (typically
+#              used in two-sided boards).
+
+# Note that a single sided PCB the Copper is back, not front
+#front=example-front-Copper.gbr
+#front=example-front-Copper.pho
+
+
+# back=filename.gbr
+#              Engrave the back side according to the given file.
+#back=U800P-001-A.bottom2.gbr
+#back=duplexer1_bottom.gbr
+back=globe4d-sensor_0.2_2011090607_no_alignment_stripes-Copper.pho
+
+
+# outline=filename.gbr
+#              Cut  out the board to the shape exposed in the given file. Typi‐
+#              cally, there is only a polygon in this gerber file.
+#outline=contour.back.gbr
+
+# drill=filename.cnc
+#              Convert the given file (containing drill sizes and positions) to
+#              G-code.
+#drill=duplexer1_nozeros_unix.nc
+
+drill=globe4d-sensor_0.2_2011090607_no_alignment_stripes.drl
+
+
+#
+#       For  every  option  --x  that  takes a filename, there is an --x-output
+#       option that specifies where the resulting G-code is  saved,  defaulting
+#       to  x.gbr.  Instead  of  giving  each  output file name, the --basename
+#       option can be used; the base name will be  used  as  a  prefix  to  the
+#       default output file names.
+
+
+#verbose
+
+# parameters for isolation routing / engraving / etching
+#       The parameters that define engraving are:
+#
+# zwork=unit
+#              Z-coordinate at which engraving happens
+zwork=-0.008
+
+# zsafe=unit
+#              Z-coordinate for movements between engraving steps
+zsafe=0.8
+
+#
+# mill-feed=unit/minute
+#              feed rate at which engraving takes place (horizontal speed)
+mill-feed=6
+
+# mill-speed=rpm
+#              spindle speed during engraving (rounds per minute)
+mill-speed=30000
+
+# offset=unit
+#              distance by which the tool movement will be outset from the con‐
+#              tours in the gerber file to be engraved
+#
+#              If this distance can’t be satisfied because copper areas are too
+#              close,  a  warning  will  be  printed and the line will be drawn
+#              between the areas. This behavior can be  used  to  get  voronoi-
+#              style  (flood-filling)  areas;  simply set the offset to a large
+#              value (like 1 inch).
+
+#no voronoi offset=0.05
+# generate voronoi regions by setting offset to a very high value
+# http://sourceforge.net/apps/mediawiki/pcb2gcode/index.php?title=Voronoi_region
+#vornomoi offset=1
+offset=2
+
+
+
+# parameters for cutting out boards
+
+# The parameters that define outline cutting are:
+#
+# cutter-diameter=unit
+#              amount by half of which the tool path is outset from  the  shape
+#              in the outline file
+cutter-diameter=0.059055118
+
+# zcut=unit
+#              Z-coordinate indicating where the outline cutting ends
+zcut=-0.08
+
+# cut-feed=unit
+#              feed  rate  at  which  outline  cutting  takes place (horizontal
+#              speed)
+cut-feed=6
+
+# cut-speed=rpm
+#              spindle speed during outline cutting (rounds per minute)
+cut-speed=20000
+
+# cut-infeed=rpm
+#              maximum Z distance that is cut away in a single  pass  (positive
+#              value;  if  less  then zcut’s value, there will be more than one
+#              pass)
+cut-infeed=1
+
+
+# drilling parameters
+
+# Drilling takes another set of options:
+#
+# zdrill=unit
+#              Z value down to which will be drilled
+zdrill=-0.08
+
+# zchange=unit
+#              Z-coordinate for movements with the drill head
+zchange=0.25
+
+# drill-feed=unit/minute
+#              feed rate for drilling (vertical speed)
+drill-feed=6
+
+# drill-speed=rpm
+#              spindle speed during drilling (rounds per minute)
+drill-speed=20000
+
+# milldrill
+#              If milldrill is given, the milling head will be used to  drill
+#              the  holes  in the PCB. Holes up to the size of the milling head
+#              will be drilled regularly (possibly creating a bigger hole  than
+#              intended),  the  other  holes  are created by moving the head in
+#              circles using the feed and infeed parameters used in cutting.
+
+#       These options govern the general behavior of pcb2gcode:
+#
+# dpi=dpi
+#              resolution used internally (defaults to 1000)
+dpi=1000
+
+# mirror-absolute
+#              mirror operations on the back side along the Y axis  instead  of
+#              the board center, which is the default
+#
+#       The  only  options  that  can’t be used in the millproject file are the
+#       common ones:
+#
+#       -?, --help
+#              Show summary of options.
+#
+#       -v, --version
+#              Show version of program.
+#
+# SEE ALSO
+#       gerbv(1), pcb(1).
+#
+#       For  further  information  about  pcb2gcode,  see  the   project   wiki
+#       〈http://sourceforge.net/apps/mediawiki/pcb2gcode/〉.
+
+
+#max-deviation=0
+
