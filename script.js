@@ -1,5 +1,5 @@
-var svg;
-var ieV;
+var svg; // svg gcode visualization
+var ieV; // Internet Explorer version
 
 var minX = 0;
 var maxX = 0;
@@ -10,6 +10,25 @@ var maxZ = 0;
 var minF = 9999;
 var maxF = 0;
 var units = "mm";
+
+var parameters = {}; // parameters that are send to pcb2gcode
+
+var gcodeE = ".ngc";
+
+const PREVIEW_TYPE_VISUALIZATION = 'visualization';
+const PREVIEW_TYPE_ORIGINAL = 'org';
+const PREVIEW_TYPE_TRACED = 'traced';
+const PREVIEW_TYPE_INFO = 'info';
+var previewState = PREVIEW_TYPE_VISUALIZATION;
+
+
+//const GCODE_TYPE_FRONT = 'front';
+//const GCODE_TYPE_BACK = 'back';
+//const GCODE_TYPE_DRILL = 'drill';
+//const GCODE_TYPE_OUTLINE = 'outline';
+var gcodeState; //= GCODE_TYPE_FRONT;
+
+var gcodeFiles = new Array('front','back','drill','outline');
 
 function init() {
 	//console.group("init");
@@ -49,26 +68,258 @@ function getInternetExplorerVersion()
 
 function onCreateGCODEMouseDown()
 {
+	// collect parameters
+	var inputDiv = document.getElementById("input");
+	var inputs = inputDiv.getElementsByTagName("input");
+	var numInputs = inputs.length;
 	
+	for(var i=0;i<numInputs;i++)
+	{
+		var input = inputs[i];
+		parameters[input.name] = input.value;
+		
+		//if()
+		var inputFileNameKey = input.name.replace("-output","");
+		if(gcodeFiles.indexOf(inputFileNameKey) != -1)
+		{
+			if(input.value == "")
+			{
+				parameters[input.name] = parameters[inputFileNameKey].replace(/\.[^\.]*$/g,'.ngc');
+			}
+		}
+		//gcodeFiles
+		
+	}
+	
+	/*for(var i=0;i<numInputs;i++)
+	{
+		var parameter = parameters[i];
+		
+		var outputName = input.name+"-output";
+		if(gcodeFiles.indexOf(outputName) != -1)
+		{
+			if(input.value == "")
+			{
+				paramters[outputName] = paramters[]
+			}
+		}
+		//gcodeFiles
+		
+	}*/
+
+	//console.log("parameters: ",parameters);
+	
+	// update gcode tabs 
+	var gcodeTabsHTML = "";
+	//var gcodeDownloadsHTML = "";
+	var firstFile = true;
+	var firstFileType = "";
+	for(var i=0;i<gcodeFiles.length;i++)
+	{
+		var type = gcodeFiles[i];
+		if(parameters[type] == "") continue;
+		
+		// tab
+		var classAtr = (firstFile)? ' class="active"' : '';
+		gcodeTabsHTML += '<a href="#" onclick="loadGCode(\''+type+'\')"'+classAtr+'>'+type+'</a>';
+		
+		// download button
+		//gcodeDownloadsHTML += '<input type="button" value="'+type+'" name="'+type+'" class="button" 	onclick="download(\''+type+'\');" title="download '+type+'" />';
+
+		if(firstFile) firstFileType = type;
+		firstFile = false;
+	}
+	var gcodeTabs = document.getElementById('gcodeTabs');
+	gcodeTabs.innerHTML = gcodeTabsHTML;
+	
+	//var gcodeDownloads = document.getElementById('gcodeDownloads');
+	//gcodeDownloads.innerHTML = gcodeDownloadsHTML;
+	
+	
+	if(firstFileType != "")
+		loadGCode(firstFileType);
+	
+	// TODO: check for original & traced images
 }
-function gcodeChanged()
+function onGCodeChanged()
 {
 	updateSVG();
 }
-function gotoGCode(type)
+function loadGCode(type)
 {
-
-}
-function download(id)
-{
+	var gcode = document.getElementById("gcode");
+	gcode.value = 'loading...';
 	
+	var fileName = parameters['basename']+parameters[type+'-output']+gcodeE;
+	//console.log("filename: ",fileName);
+	
+	var xmlhttp = createRequest();
+	xmlhttp.onreadystatechange = function()
+	{
+		var gcode = document.getElementById("gcode");
+		if(xmlhttp.readyState == 4 && xmlhttp.status == 200)
+		{
+			// fill gcode textarea
+			if(xmlhttp.responseText != "")
+			{
+				gcode.value = xmlhttp.responseText;
+				gotoPreview(previewState);
+			}
+			else
+			{
+				gcode.value = 'can\'t find file or can\'t read from file';
+			}
+		}
+	}
+	xmlhttp.open("GET","pcb2gcode.php?action=loadFile&fileName="+fileName);
+	xmlhttp.send();
+	
+	// update tabs
+	var gcodeTabs = document.getElementById('gcodeTabs');
+	var children = gcodeTabs.childNodes;
+	for(var i=0;i<children.length;i++)
+	{
+		var child = children[i];
+		if(child.innerHTML == type)
+		{
+			child.setAttribute('class','active');
+		}
+		else
+		{
+			child.removeAttribute('class');
+		}
+	}
+	
+	gcodeState = type;
+}
+function downloadCurrentGCode()
+{
+	download(gcodeState);
+}
+function downloadCurrentPreview()
+{
+	download(previewState);
+}
+function download(type)
+{
+	switch(type)
+	{
+		case 'visualization':
+			var content = getNodeXML(svg);
+			
+			var downloadForm = document.getElementById("downloadForm");
+			//console.log("downloadForm: ",downloadForm);
+			var inputs = downloadForm.getElementsByTagName("input");//("content");
+			for(var i=0;i<inputs.length;i++)
+			{
+				var input = inputs[i];
+				//console.log("input.name: ",input.name);
+				switch(input.name)
+				{
+					case 'content':
+						input.value = content;
+						break;
+					case 'type':
+						input.value = type;
+						break;
+				}
+			}
+			downloadForm.submit();
+			//window.location = "pcb2gcode.php?action=downloadSVG&content="+content+"&type="+type;
+			break;
+		case 'org':
+			var fileName = 'original.png';
+			window.location = "pcb2gcode.php?action=downloadFile&fileName="+fileName;
+			break;
+		case 'traced':
+			var fileName = 'traced.png';
+			window.location = "pcb2gcode.php?action=downloadFile&fileName="+fileName;
+			break;
+		case 'all':
+			window.location = "pcb2gcode.php?action=downloadAll";
+			break;
+		default:
+			var fileName = parameters['basename']+parameters[type+'-output']+gcodeE;
+			window.location = "pcb2gcode.php?action=downloadFile&fileName="+fileName;
+			break;
+	}
 }
 function gotoPreview(type)
 {
-
+	var previewContainer = document.getElementById('previewContainer');
+	var previewMenu = document.getElementById('previewMenu');
+	previewContainer.innerHTML = "";
+	switch(type)
+	{
+		case PREVIEW_TYPE_VISUALIZATION:
+			previewContainer.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg" width="400" height="400"></svg>';
+			
+			/*svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+			svg.setAttributeNS(null,'xmlns:xlink', 'http://www.w3.org/1999/xlink');
+			svg.setAttributeNS(null,'id', 'svg');
+			svg.setAttributeNS(null,'width', '400');
+			svg.setAttributeNS(null,'height', '400');
+			svg.setAttributeNS(null,'preserveAspectRatio', 'xMinYMin');
+			previewContainer.appendChild(svg);*/
+			
+			updateSVG();
+			
+			previewMenu.style.display = "block";
+			break;
+		case PREVIEW_TYPE_ORIGINAL:
+			previewContainer.innerHTML = '<img src="generated/666/original.png" width="400"/>';
+			previewMenu.style.display = "none";
+			break;
+		case PREVIEW_TYPE_TRACED:
+			previewContainer.innerHTML = '<img src="generated/666/traced.png" width="400" />';
+			previewMenu.style.display = "none";
+			break;
+		case PREVIEW_TYPE_INFO:
+			var request = createRequest();
+			request.onreadystatechange = function() 
+			{
+				if(request.readyState == 4)
+				{
+					previewContainer.innerHTML = request.responseText;
+				}
+			}
+			request.open("GET", "info.html", true);
+			request.send(null);
+			
+			previewMenu.style.display = "none";
+			break;
+	}
+	
+	// update tabs
+	var previewTabs = document.getElementById('previewTabs');
+	var children = previewTabs.childNodes;
+	for(var i=0;i<children.length;i++)
+	{
+		var child = children[i];
+		if(child.innerHTML == type)
+		{
+			child.setAttribute('class','active');
+		}
+		else
+		{
+			child.removeAttribute('class');
+		}
+	}
+	
+	previewState = type;
 }
 
-
+function createRequest()
+{
+	if(window.XMLHttpRequest) //IE7+, firefox, Chrome, Opera, Safari
+	{
+		return new XMLHttpRequest();
+	}
+	else //IE6, IE5
+	{
+		return new ActiveXObject("Microsoft.XMLHTTP");
+	}
+}
 
 
 function updateSVG()
@@ -79,16 +330,16 @@ function updateSVG()
 	gcode = document.getElementById('gcode').value;
 	//console.log("gcode: ",gcode);
 	
-	svg = document.getElementById('svg');
+	//svg = document.getElementById('svg');
 	//console.log("svg: ",svg);
 	
-	procesGCode(gcode);
+	visualizeGCode(gcode);
 	
 	//console.groupEnd();
 }
-function procesGCode(gcode)
+function visualizeGCode(gcode)
 {
-	//console.group("procesGCode");
+	//console.group("visualizeGCode");
 	//console.log("gcode: ",gcode);
 	
 	// remove comments
@@ -96,8 +347,8 @@ function procesGCode(gcode)
 	//console.log("->gcode: ",gcode);
 	
 	// clear svg
-	var svgContainer = document.getElementById('svgContainer');
-	while(svgContainer.childNodes.length) svgContainer.removeChild(svgContainer.childNodes[0]);
+	var previewContainer = document.getElementById('previewContainer');
+	while(previewContainer.childNodes.length) previewContainer.removeChild(previewContainer.childNodes[0]);
 	
 	// recreate svg
 	svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -105,7 +356,7 @@ function procesGCode(gcode)
 	svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
 	svg.setAttribute('width', 400);
 	svg.setAttribute('height', 400);
-	svgContainer.appendChild(svg);
+	previewContainer.appendChild(svg);
 	
 	svgDoc = svg.ownerDocument;
 	var svgNS = svg.getAttribute("xmlns");
@@ -170,7 +421,7 @@ function procesGCode(gcode)
 							polylinePoints = prevX+','+prevY;
 							break;
 						case 20: //inches
-							procesGCode(convertAllInches2mm(gcode));
+							visualizeGCode(convertAllInches2mm(gcode));
 							return;
 							break;
 						case 21: //mm							
@@ -220,7 +471,7 @@ function procesGCode(gcode)
 	
 	setViewbox((minX-1),(minY-1),(width+2),(height+2));
 	//zoom(0);	
-	svg.setAttributeNS(null,'preserveAspectRatio', 'xMinYMin');
+	
 
 	
 	// events
@@ -360,13 +611,13 @@ function onSVGMouseMove(e)
 		e = e || window.event;
 		var pos = mouseCoords(e);
 		
-		var svgContainer = document.getElementById("svgContainer");
+		var previewContainer = document.getElementById("previewContainer");
 		
-		var dx = (pos.x - offset.x) * viewbox.w/svgContainer.offsetWidth;
-		var dy = (pos.y - offset.y) * viewbox.h/svgContainer.offsetHeight;
+		var dx = (pos.x - offset.x) * viewbox.w/previewContainer.offsetWidth;
+		var dy = (pos.y - offset.y) * viewbox.h/previewContainer.offsetHeight;
 		
-		//console.log("svgContainer.offsetWidth: ",svgContainer.offsetWidth);
-		//console.log("svgContainer.offsetHeight: ",svgContainer.offsetHeight);
+		//console.log("previewContainer.offsetWidth: ",previewContainer.offsetWidth);
+		//console.log("previewContainer.offsetHeight: ",previewContainer.offsetHeight);
 		
 		var vx = (viewbox.x - dx).toPrecision(3);
 		var vy = (viewbox.y - dy).toPrecision(3);

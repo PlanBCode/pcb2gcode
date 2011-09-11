@@ -10,7 +10,7 @@
 	<body onload="init();">
 		<div id="outerContainer">
 			<div id="container">
-				<h1>pcb2GCode online(beta)</h1>
+				<h1>pcb2GCode online (beta)</h1>
 				<div id="ieerror">
 					<p>It seems your using Internet Explorer {version}. Since IE is the only browser that doesn't fully support SVG, we would like to ask you to download a browser that does. Like: 
 						<ul>
@@ -24,7 +24,8 @@
 				<div id="editor">
 					<div id="frame1" class="frame">
 						<h2>input</h2>
-						<form enctype="multipart/form-data" method="post" action="pcb2gcode.php?action=generateGCode">
+						<form enctype="multipart/form-data" method="post">
+						<!--action="pcb2gcode.php?action=generateGCode" -->
 						<div id="input">
 								<h3 class="first">input gerber files</h3>
 								<div>
@@ -159,56 +160,87 @@
 								</div>
 								<div>
 									<label>front-output</label>
-									<input type="text" name="front-output" value="" />
+									<input type="text" name="front-output" value="front" />
 									<p class="description">output file for front layer</p>
 								</div>
 								<div>
 									<label>back-output</label>
-									<input type="text" name="back-output" value="" />
+									<input type="text" name="back-output" value="back" />
 									<p class="description">output file for back layer</p>
 								</div>
 								<div>
 									<label>outline-output </label>
-									<input type="text" name="outline-output" value="" />
+									<input type="text" name="outline-output" value="outline" />
 									<p class="description">output file for outline</p>
 								</div>
 								<div>
 									<label>drill-output</label>
-									<input type="text" name="drill-output" value="" />
+									<input type="text" name="drill-output" value="drill" />
 									<p class="description">output file for drilling</p>
 								</div>	
 							</div>
-							<input type="submit" class="button" value="create GCode" onclick="onCreateGCODEMouseDown();"/>
+							<input type="button" class="button" value="create GCode" onclick="onCreateGCODEMouseDown();"/>
 						</form>
 					</div>
 					<div id="frame2" class="frame">
 						<h2>GCode</h2>
-						<div class="tabs">
-							<a href="#" onclick="gotoGCode('front')" class="active">front</a>
-							<a href="#" onclick="gotoGCode('back')">back</a>
-							<a href="#" onclick="gotoGCode('drill')">drill</a>
-							<a href="#" onclick="gotoGCode('outline')">outline</a>
+						<div class="tabs" id="gcodeTabs"></div>
+						<textarea name="gcode" onchange="onGCodeChanged();" id="gcode" class="code">
+
+(Example gcode)
+
+G21 
+G90
+
+F100
+S1000
+
+G00 X0.000 Y0.000 Z0.000
+
+G01 Z-1.000 F100
+G01 X5 Y0 F100
+G01 X5 Y5 F100
+G01 X0 Y5 F100
+G01 X0 Y0 F100
+G01 Z1.000 F300
+
+G00 X10.000 Y0.000 F300
+
+G01 Z-0.500 F100
+G01 X15 Y0 F100
+G01 X15 Y5 F100
+G01 X10 Y5 F100
+G01 X10 Y0 F100
+G01 Z1.000 F300
+
+G00 X0.000 Y10.000 F300
+
+G01 Z-0.200 F100
+G01 X15 Y10 F100
+G01 X15 Y14 F100
+G01 X13 Y14 F100
+G01 X13 Y15 F100
+G01 X2 Y15 F100
+G01 X2 Y14 F100
+G01 X0 Y14 F100
+G01 X0 Y10 F100
+G01 Z1.000 F300
+
+G00 X0.000 Y0.000 F300
+						</textarea><br />
+						<div id="gcodeDownloads" class="menu">
+							<input type="button" value="download" class="button" onclick="downloadCurrentGCode();" title="download this gcode" />
+							<input type="button" value="download all" class="button" onclick="download('all');" title="download all generated files" />
 						</div>
-						<textarea name="gcode" onchange="gcodeChanged();" id="gcode" class="code"></textarea><br />
-						<input type="button" value="front" 	name="front" 	id="frontDownload" 	class="button" 	onclick="download('front');" 	title="download front" />
-	    				<input type="button" value="back"	name="back" 	id="backDownload" 	class="button" 	onclick="download('back');" 	title="download back" />
-	    				<input type="button" value="drill" 	name="drill" 	id="drillDownload" 	class="button" 	onclick="download('drill');" 	title="download drill" />
-	    				<input type="button" value="outline" name="outline" id="outlineDownload" class="button" onclick="download('outline');" 	title="download outline" />
 					</div>
 					<div id="frame3" class="frame">
 						<h2>preview</h2>
-						<div class="tabs">
-							<a href="#" onclick="gotoPreview('visualizer')" class="active">visualizer</a>
-							<a href="#" onclick="gotoPreview('org')">org</a>
-							<a href="#" onclick="gotoPreview('traced')">traced</a>
-						</div>
-						<div id="svgContainer">
-							<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg" width="400" height="400"></svg>
+						<div class="menu" id="previewMenu"><input type="button" class="button" value="+" onclick="zoom(1);" title="zoom in" /><input type="button" class="button" value="&#8853;" onclick="zoom(0);" title="default viewbox" /><input type="button" class="button" value="&#8722;" onclick="zoom(-1);" title="zoom out" /></div>
+						<div class="tabs" id="previewTabs"><a href="#" onclick="gotoPreview('visualization')" class="active">visualization</a><a href="#" onclick="gotoPreview('org')">org</a><a href="#" onclick="gotoPreview('traced')">traced</a><a href="#" onclick="gotoPreview('info')">info</a></div>
+						<div id="previewContainer">
 						</div>
 						<div id="boundsDisplay"></div>
-						<input type="button" class="button" value="visualization" 	onclick="download('visualization');" title="download visualization" />
-	    				<input type="button" class="button" value="original" 		onclick="download('original');" 	 title="download original" />
-	    				<input type="button" class="button" value="traced" 		onclick="download('traced');" 		 title="download traced" />
+						<input type="button" value="download" class="button" onclick="downloadCurrentPreview();" title="download this preview" />
 					</div>
 					<div class="clear"></div>
 				</div>
@@ -218,5 +250,9 @@
 	
 			</div>
 		</div>
+		<form method="post" action="pcb2gcode.php?action=downloadContent" id="downloadForm">
+			<input type="hidden" value="" name="content" />
+			<input type="hidden" value="" name="type" />
+		</form>
 	</body>
 </html>

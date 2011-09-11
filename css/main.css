@@ -27,7 +27,19 @@ h3 {
 	font-weight:bold;
 	margin:0 0 0 2px;
 }
-
+p
+{
+	margin: 0 0 0.5em 0;
+}
+a
+{
+	color: #3F83FF;
+	text-decoration: none;
+}
+a:hover
+{
+	color: #063ECB;
+}
 /* ///////// global layout /////////// */
 body, html
 {
@@ -107,6 +119,7 @@ body, html
 	text-decoration: none;
 	color: #000;
 	border: 1px solid #bbb;
+	margin: 0 0 0 4px;
 }
 .tabs a:hover
 {
@@ -126,6 +139,17 @@ body, html
 	text-decoration: none;
 	color: #000;
 	border-bottom-color: #fff;
+}
+/* ///////// menu's /////////// */
+.menu
+{
+	margin: 1px 0 0;
+    position: absolute;
+    right: 0;
+}
+.menu .button
+{
+	margin: 0; /*0 4px 0 0;*/
 }
 
 /* ///////// frame 1: Input /////////// */
@@ -186,13 +210,24 @@ body, html
 	height: 400px;
 	/*margin: 0 0 8px 0;*/
 	
-	border: 1px solid #aaa;
+	
 	overflow: hidden;
 	background-color:#fff;
 }
-#frame3 #svgContainer
+#frame3 #previewContainer
 {
 	margin: 0 0 8px 0;
+	border: 1px solid #aaa;
+	width: 400px;
+	height: 400px;
+}
+#frame3 #previewContainer .text
+{
+	padding: 4px 8px 8px 8px; 
+	background-color: #fff; /*#eee;*/
+	width: 384px;
+	height: 388px;
+	overflow: auto;
 }
 #frame3 #boundsDisplay
 {
@@ -207,14 +242,6 @@ body, html
 	text-align: right;
 	color: #aaa;
 	font-size: 8pt;
-}
-#footer a
-{
-	color: #3F83FF;
-}
-#footer a:hover
-{
-	color: #225BDE;
 }
 /* ///////// forms /////////// */
 input[type="text"], input[type="password"], input.text, input.title, textarea, select
