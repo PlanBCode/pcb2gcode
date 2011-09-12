@@ -10,25 +10,16 @@ var maxZ = 0;
 var minF = 9999;
 var maxF = 0;
 var units = "mm";
-
 var parameters = {}; // parameters that are send to pcb2gcode
-
 var gcodeE = ".ngc";
-
 const PREVIEW_TYPE_VISUALIZATION = 'visualization';
 const PREVIEW_TYPE_ORIGINAL = 'org';
 const PREVIEW_TYPE_TRACED = 'traced';
 const PREVIEW_TYPE_INFO = 'info';
 var previewState = PREVIEW_TYPE_VISUALIZATION;
-
-
-//const GCODE_TYPE_FRONT = 'front';
-//const GCODE_TYPE_BACK = 'back';
-//const GCODE_TYPE_DRILL = 'drill';
-//const GCODE_TYPE_OUTLINE = 'outline';
 var gcodeState; //= GCODE_TYPE_FRONT;
-
 var gcodeFiles = new Array('front','back','drill','outline');
+var userID; // id created in php, per session. Used to name the folder with all his/her data.
 
 function init() {
 	//console.group("init");
@@ -42,6 +33,7 @@ function init() {
 	}
 	if(ieV == -1 || ieV >= 9.0)
 	{
+		createUserFolder();
 		updateSVG();
 	}
 	//console.groupEnd();
@@ -61,11 +53,20 @@ function getInternetExplorerVersion()
   return rv;
 }
 
-
-
-
-
-
+function createUserFolder()
+{
+	var xmlhttp = createRequest();
+	xmlhttp.onreadystatechange = function()
+	{
+		if(xmlhttp.readyState == 4 && xmlhttp.status == 200)
+		{
+			userID = xmlhttp.responseText;
+			//console.log("userID: ",userID);
+		}
+	}
+	xmlhttp.open("GET","pcb2gcode.php?action=createUserFolder");
+	xmlhttp.send();
+}
 function onCreateGCODEMouseDown()
 {
 	// collect parameters
@@ -91,23 +92,7 @@ function onCreateGCODEMouseDown()
 		
 	}
 	
-	/*for(var i=0;i<numInputs;i++)
-	{
-		var parameter = parameters[i];
-		
-		var outputName = input.name+"-output";
-		if(gcodeFiles.indexOf(outputName) != -1)
-		{
-			if(input.value == "")
-			{
-				paramters[outputName] = paramters[]
-			}
-		}
-		//gcodeFiles
-		
-	}*/
-
-	//console.log("parameters: ",parameters);
+	convertFilesToMM();
 	
 	// update gcode tabs 
 	var gcodeTabsHTML = "";
@@ -135,11 +120,23 @@ function onCreateGCODEMouseDown()
 	//var gcodeDownloads = document.getElementById('gcodeDownloads');
 	//gcodeDownloads.innerHTML = gcodeDownloadsHTML;
 	
-	
 	if(firstFileType != "")
 		loadGCode(firstFileType);
 	
 	// TODO: check for original & traced images
+}
+function convertFilesToMM()
+{
+	var xmlhttp = createRequest();
+	xmlhttp.onreadystatechange = function()
+	{
+		if(xmlhttp.readyState == 4 && xmlhttp.status == 200)
+		{
+			// load firstFileType
+		}
+	}
+	xmlhttp.open("GET","pcb2gcode.php?action=convertFiles&userID="+userID);
+	xmlhttp.send();
 }
 function onGCodeChanged()
 {
@@ -267,11 +264,11 @@ function gotoPreview(type)
 			previewMenu.style.display = "block";
 			break;
 		case PREVIEW_TYPE_ORIGINAL:
-			previewContainer.innerHTML = '<img src="generated/666/original.png" width="400"/>';
+			previewContainer.innerHTML = '<img src="generated/example/original.png" width="400"/>';
 			previewMenu.style.display = "none";
 			break;
 		case PREVIEW_TYPE_TRACED:
-			previewContainer.innerHTML = '<img src="generated/666/traced.png" width="400" />';
+			previewContainer.innerHTML = '<img src="generated/example/traced.png" width="400" />';
 			previewMenu.style.display = "none";
 			break;
 		case PREVIEW_TYPE_INFO:
