@@ -7,7 +7,9 @@
 		
 			break;
 		case 'loadFile':
-			@readfile('generated/example/'.$_GET['fileName']);
+			//@readfile('generated/example/'.$_GET['fileName']);
+			//echo $_GET['userID']."     ";
+			@readfile('generated/'.$_GET['userID'].'/'.$_GET['fileName']);
 			break;
 		case 'downloadContent':
 			$fileName = $_POST['type'];
@@ -24,10 +26,12 @@
 		case 'downloadFile':
 			header('Content-type: text/plain');
 			header('Content-Disposition: attachment; filename="'.$_GET['fileName']);
-			@readfile('generated/example/'.$_GET['fileName']);
+			//@readfile('generated/example/'.$_GET['fileName']);
+			@readfile('generated/'.$_GET['userID'].'/'.$_GET['fileName']);
 			break;
 		case 'checkFileExistence':
-			$fileURL = 'generated/example/'.$_GET['fileName'];
+			//$fileURL = 'generated/example/'.$_GET['fileName'];
+			$fileURL = 'generated/'.$_GET['userID'].'/'.$_GET['fileName'];
 			echo (file_exists($fileURL) && is_readable ($fileURL));
 			break;
 		case 'downloadAll':
@@ -39,9 +43,11 @@
 			  'back.ngc',
 			  'drill.ngc'
 			);*/			
-			$targetFileNames = getFiles('generated/example',array('ngc','png'),true);
+			//$targetFileNames = getFiles('generated/example',array('ngc','png'),true);
+			$targetFileNames = getFiles('generated/'.$_GET['userID'],array('ngc','png'),true);
 			//print_r($targetFileNames);
-			$targetFolder = 'generated/example/';
+			//$targetFolder = 'generated/example/';
+			$targetFolder = 'generated/'.$_GET['userID'];
 			$archiveFileName = 'allgcodes.zip';
 			$result = createZip($targetFileNames,$archiveFileName,$targetFolder,true);
 			
@@ -90,12 +96,38 @@
 				}
 			}
 			
+			$exampleFiles = getFiles('generated/example',array('ngc','png'),true);
+			for($i=0;$i<count($exampleFiles);$i++)
+			{
+				$exampleFileName = $exampleFiles[$i];
+				copy("generated/example/".$exampleFileName,"generated/".$userID."/".$exampleFileName);
+			}
+			echo $userID;
 			
 			//remove old user folders
 			break;
 		case 'convertFiles':
+			$userID = $_GET['userID'];
 			
-			$_GET['userID'];
+			
+			
+			$gcodeFiles = getFiles('generated/'.$userID,array('ngc'));
+			
+			for($i=0;$i<count($gcodeFiles);$i++)
+			{
+				$gcodeFileURL = $gcodeFiles[$i];
+				$gcodeFile = fopen($gcodeFileURL,"r+");
+				$gcode = file_get_contents($gcodeFileURL);
+				
+				echo '  '.$gcodeFileURL.'<br/>';
+				
+				$gcode = convertAllInches2mm($gcode);
+				
+				echo '  '.$gcode.'<br/>';
+				
+				//fwrite();
+				file_put_contents($gcodeFileURL, $gcode);
+			}
 			// get ngc files
 			// loop trough files
 			//   read content
@@ -105,6 +137,34 @@
 			
 			break;
 	}
+	 
+	function inches2mm($matches)
+	{
+		$axis = $matches[1];
+		$inches = $matches[2];
+		$mm = $inches*25.4;
+		$space = $matches[3];
+	  	return $axis.$mm.$space;
+	  	//return 'text'.$matches[0];
+	  	//return $matches[1];
+	}
+	function convertAllInches2mm($gcode)
+	{
+		//console.log("convertAllInches2mm");
+		
+		$gcode = str_replace('G20','G21',$gcode);
+		$gcode = str_replace(array('INCHES','Inches','inches'),array('MM','mm','mm'),$gcode);
+		
+		//$gcodeMM = preg_replace_callback("([X|Y|F|Z])([0-9.-]*?)(\s)", "inches2mm",$gcode);
+		$gcodeMM = preg_replace_callback("/([X|Y|F|Z])([0-9.-]*?)(\s)/", "inches2mm",$gcode);
+		//$gcodeMM = preg_replace_callback("([X|Y|F|Z])([0-9.-]*?)(\s)", "inches2mm",$gcode);
+		//$gcodeMM = preg_replace_callback("|([X|Y|F|Z])([0-9.-]*?)(\s)|", "inches2mm",$gcode);
+		//$gcodeMM = preg_replace_callback("[X|Y|F|Z][0-9.-]*?\s", "inches2mm",$gcode);
+		//$gcodeMM = preg_replace_callback("/X/","inches2mm",$gcode);
+		//$gcodeMM = $gcode; //preg_replace_callback("/(X)/","inches2mm",$gcode);
+		return $gcodeMM;
+	}
+
 	 
 	function removeFiles($folder)
 	{		

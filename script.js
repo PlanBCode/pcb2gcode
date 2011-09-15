@@ -92,47 +92,39 @@ function onCreateGCODEMouseDown()
 		
 	}
 	
+	// convert all the gcode files to mm units using php
 	convertFilesToMM();
-	
-	// update gcode tabs 
-	var gcodeTabsHTML = "";
-	//var gcodeDownloadsHTML = "";
-	var firstFile = true;
-	var firstFileType = "";
-	for(var i=0;i<gcodeFiles.length;i++)
-	{
-		var type = gcodeFiles[i];
-		if(parameters[type] == "") continue;
-		
-		// tab
-		var classAtr = (firstFile)? ' class="active"' : '';
-		gcodeTabsHTML += '<a href="#" onclick="loadGCode(\''+type+'\')"'+classAtr+'>'+type+'</a>';
-		
-		// download button
-		//gcodeDownloadsHTML += '<input type="button" value="'+type+'" name="'+type+'" class="button" 	onclick="download(\''+type+'\');" title="download '+type+'" />';
-
-		if(firstFile) firstFileType = type;
-		firstFile = false;
-	}
-	var gcodeTabs = document.getElementById('gcodeTabs');
-	gcodeTabs.innerHTML = gcodeTabsHTML;
-	
-	//var gcodeDownloads = document.getElementById('gcodeDownloads');
-	//gcodeDownloads.innerHTML = gcodeDownloadsHTML;
-	
-	if(firstFileType != "")
-		loadGCode(firstFileType);
-	
-	// TODO: check for original & traced images
 }
 function convertFilesToMM()
 {
+	//console.log("convertFilesToMM");
 	var xmlhttp = createRequest();
 	xmlhttp.onreadystatechange = function()
 	{
 		if(xmlhttp.readyState == 4 && xmlhttp.status == 200)
 		{
-			// load firstFileType
+			// update gcode tabs 
+			var gcodeTabsHTML = "";
+			//var gcodeDownloadsHTML = "";
+			var firstFile = true;
+			var firstFileType = "";
+			for(var i=0;i<gcodeFiles.length;i++)
+			{
+				var type = gcodeFiles[i];
+				if(parameters[type] == "") continue;
+				
+				// tab
+				gcodeTabsHTML += '<a href="#" onclick="loadGCode(\''+type+'\')">'+type+'</a>';
+				
+				if(firstFile) firstFileType = type;
+				firstFile = false;
+			}
+			var gcodeTabs = document.getElementById('gcodeTabs');
+			gcodeTabs.innerHTML = gcodeTabsHTML;
+			
+			// load first gcode file
+			if(firstFileType != "")
+		loadGCode(firstFileType);
 		}
 	}
 	xmlhttp.open("GET","pcb2gcode.php?action=convertFiles&userID="+userID);
@@ -144,6 +136,7 @@ function onGCodeChanged()
 }
 function loadGCode(type)
 {
+	//console.log("loadGCode: ",type);
 	var gcode = document.getElementById("gcode");
 	gcode.value = 'loading...';
 	
@@ -160,6 +153,7 @@ function loadGCode(type)
 			if(xmlhttp.responseText != "")
 			{
 				gcode.value = xmlhttp.responseText;
+				//console.log("xmlhttp.responseText: ",xmlhttp.responseText);
 				gotoPreview(previewState);
 			}
 			else
@@ -168,7 +162,7 @@ function loadGCode(type)
 			}
 		}
 	}
-	xmlhttp.open("GET","pcb2gcode.php?action=loadFile&fileName="+fileName);
+	xmlhttp.open("GET","pcb2gcode.php?action=loadFile&fileName="+fileName+"&userID="+userID);
 	xmlhttp.send();
 	
 	// update tabs
@@ -249,7 +243,7 @@ function gotoPreview(type)
 	switch(type)
 	{
 		case PREVIEW_TYPE_VISUALIZATION:
-			previewContainer.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg" width="400" height="400"></svg>';
+			previewContainer.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg" width="385" height="400"></svg>';
 			
 			/*svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 			svg.setAttributeNS(null,'xmlns:xlink', 'http://www.w3.org/1999/xlink');
@@ -264,11 +258,11 @@ function gotoPreview(type)
 			previewMenu.style.display = "block";
 			break;
 		case PREVIEW_TYPE_ORIGINAL:
-			previewContainer.innerHTML = '<img src="generated/example/original.png" width="400"/>';
+			previewContainer.innerHTML = '<img src="generated/example/original.png" width="385"/>';
 			previewMenu.style.display = "none";
 			break;
 		case PREVIEW_TYPE_TRACED:
-			previewContainer.innerHTML = '<img src="generated/example/traced.png" width="400" />';
+			previewContainer.innerHTML = '<img src="generated/example/traced.png" width="385" />';
 			previewMenu.style.display = "none";
 			break;
 		case PREVIEW_TYPE_INFO:
@@ -351,7 +345,7 @@ function visualizeGCode(gcode)
 	svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 	svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 	svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-	svg.setAttribute('width', 400);
+	svg.setAttribute('width', 385);
 	svg.setAttribute('height', 400);
 	previewContainer.appendChild(svg);
 	

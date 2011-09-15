@@ -193,10 +193,12 @@ body, html
 /* ///////// frame 2: GCode /////////// */
 #frame2 textarea
 {
-	width: 260px;
+	width: 286px; /*360px;*/ /*260px;*/
 	height: 391px;
     margin: 0 0 8px;
-    padding: 4px;   
+    padding: 4px;  
+    
+    font-size: 8pt;
 }
 /*#frame2 .button
 {
@@ -206,7 +208,7 @@ body, html
 
 #frame3 svg
 {
-	width: 400px;
+	width: 385px;
 	height: 400px;
 	/*margin: 0 0 8px 0;*/
 	
@@ -218,15 +220,17 @@ body, html
 {
 	margin: 0 0 8px 0;
 	border: 1px solid #aaa;
-	width: 400px;
+	width: 385px;
 	height: 400px;
+	
+	background-color: #fff;
 }
 #frame3 #previewContainer .text
 {
-	padding: 4px 8px 8px 8px; 
-	background-color: #fff; /*#eee;*/
-	width: 384px;
-	height: 388px;
+	margin: 4px 8px 8px 8px; 
+	/*background-color: #fff; /*#eee;*/*/
+	/*width: 384px;*/
+	/*height: 388px;*/
 	overflow: auto;
 }
 #frame3 #boundsDisplay
